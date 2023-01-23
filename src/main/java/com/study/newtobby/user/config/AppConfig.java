@@ -4,6 +4,8 @@ import com.study.newtobby.user.dao.UserDao;
 import com.study.newtobby.user.dao.UserDaoJdbc;
 import com.study.newtobby.user.service.DummyMailSender;
 import com.study.newtobby.user.service.UserService;
+import com.study.newtobby.user.service.UserServiceImpl;
+import com.study.newtobby.user.service.UserServiceTx;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -13,14 +15,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import java.sql.Driver;
 
 
 @Configuration
 @Component
 public class AppConfig {
 	@Bean
-	public DataSource dataSource() throws ClassNotFoundException {
+	public DataSource dataSource(){
 		SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
 
 		dataSource.setDriverClass(com.mysql.jdbc.Driver.class);
@@ -31,7 +32,7 @@ public class AppConfig {
 	}
 
 	@Bean
-	public UserDao userDao() throws ClassNotFoundException {
+	public UserDao userDao(){
 		UserDaoJdbc userDao = new UserDaoJdbc();
 
 		userDao.setDataSource(dataSource());
@@ -39,14 +40,23 @@ public class AppConfig {
 	}
 
 	@Bean
-	public UserService userService(UserDao userDao, DataSource dataSource, PlatformTransactionManager transactionManager, MailSender mailSender) {
-		UserService userService = new UserService();
+	public UserService userService(){
+		UserServiceTx userServiceTx = new UserServiceTx();
+		userServiceTx.setUserService(userServiceImpl(userDao(), dataSource(), transactionManager(dataSource()), mailSender()));
+		userServiceTx.setTransactionManager(transactionManager(dataSource()));
 
-		userService.setUserDao(userDao);
-		userService.setDataSource(dataSource);
-		userService.setTransactionManager(transactionManager);
-		userService.setMailSender(mailSender);
-		return userService;
+		return userServiceTx;
+	}
+
+	@Bean
+	public UserServiceImpl userServiceImpl(UserDao userDao, DataSource dataSource, PlatformTransactionManager transactionManager, MailSender mailSender) {
+		UserServiceImpl userServiceImpl = new UserServiceImpl();
+
+		userServiceImpl.setUserDao(userDao);
+		userServiceImpl.setDataSource(dataSource);
+		userServiceImpl.setTransactionManager(transactionManager);
+		userServiceImpl.setMailSender(mailSender);
+		return userServiceImpl;
 	}
 
 	@Bean
