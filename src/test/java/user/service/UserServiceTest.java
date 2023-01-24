@@ -10,8 +10,11 @@ import com.study.newtobby.user.service.UserServiceTx;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -24,7 +27,7 @@ import  static com.study.newtobby.user.service.UserServiceImpl.MIN_RECOMMEND_FOR
 
 import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.CoreMatchers.is;
-
+import static org.mockito.BDDMockito.*;
 
 
 @ExtendWith(SpringExtension.class)
@@ -53,6 +56,34 @@ public class UserServiceTest {
 				new User("madnite1", "이상호", "p1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD, "madnite1@test.com"),
 				new User("green", "오민규", "p1", Level.GOLD, 100, Integer.MAX_VALUE, "green@test.com")
 		);
+	}
+
+	@Test
+	void mockUpgradeLevels() {
+		UserServiceImpl userServiceImpl = new UserServiceImpl();
+
+		UserDao mockUserDao = mock(UserDao.class);
+		given(mockUserDao.getAll()).willReturn(this.users);
+		userServiceImpl.setUserDao(mockUserDao);
+
+		MailSender mockMailSender = mock(MailSender.class);
+		userServiceImpl.setMailSender(mockMailSender);
+
+		userServiceImpl.upgradeLevels();
+
+		verify(mockUserDao, times(2)).update(any(User.class));
+		verify(mockUserDao, times(2)).update(any(User.class));
+		verify(mockUserDao).update(users.get(1));
+		assertThat(users.get(1).getLevel()).isEqualTo(Level.SILVER);
+		verify(mockUserDao).update(users.get(3));
+		assertThat(users.get(3).getLevel()).isEqualTo(Level.GOLD);
+
+		ArgumentCaptor<SimpleMailMessage> mailMessageArg = ArgumentCaptor.forClass(SimpleMailMessage.class);
+		verify(mockMailSender, times(2)).send(mailMessageArg.capture());
+
+		List<SimpleMailMessage> mailMessages = mailMessageArg.getAllValues();
+		assertThat(mailMessages.get(0).getTo()[0]).isEqualTo(users.get(1).getEmail());
+		assertThat(mailMessages.get(1).getTo()[0]).isEqualTo(users.get(3).getEmail());
 	}
 
 	@Test
