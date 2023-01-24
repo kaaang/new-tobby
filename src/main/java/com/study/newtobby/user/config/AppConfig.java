@@ -2,10 +2,7 @@ package com.study.newtobby.user.config;
 
 import com.study.newtobby.user.dao.UserDao;
 import com.study.newtobby.user.dao.UserDaoJdbc;
-import com.study.newtobby.user.service.DummyMailSender;
-import com.study.newtobby.user.service.UserService;
-import com.study.newtobby.user.service.UserServiceImpl;
-import com.study.newtobby.user.service.UserServiceTx;
+import com.study.newtobby.user.service.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -40,12 +37,14 @@ public class AppConfig {
 	}
 
 	@Bean
-	public UserService userService(){
-		UserServiceTx userServiceTx = new UserServiceTx();
-		userServiceTx.setUserService(userServiceImpl(userDao(), dataSource(), transactionManager(dataSource()), mailSender()));
-		userServiceTx.setTransactionManager(transactionManager(dataSource()));
+	public TxProxyFactoryBean userService(){
+		TxProxyFactoryBean txProxyFactoryBean = new TxProxyFactoryBean();
+		txProxyFactoryBean.setServiceInterface(UserService.class);
+		txProxyFactoryBean.setTarget(userServiceImpl(userDao(), dataSource(), transactionManager(dataSource()), mailSender()));
+		txProxyFactoryBean.setTransactionManager(transactionManager(dataSource()));
+		txProxyFactoryBean.setPattern("upgradeLevels");
 
-		return userServiceTx;
+		return txProxyFactoryBean;
 	}
 
 	@Bean

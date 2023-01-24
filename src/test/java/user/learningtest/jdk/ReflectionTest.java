@@ -3,8 +3,10 @@ package user.learningtest.jdk;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.*;
@@ -36,6 +38,29 @@ public class ReflectionTest {
         assertThat(proxiedHello.sayHello("Toby")).isEqualTo("HELLO TOBY");
         assertThat(proxiedHello.sayHi("Toby")).isEqualTo("HI TOBY");
         assertThat(proxiedHello.sayThankYou("Toby")).isEqualTo("THANK YOU TOBY");
+    }
+
+    @Test
+    void DynamicProxy() {
+        Hello proxiedHello = (Hello) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{Hello.class}, new UppercaseHandler(new HelloTarget()));
+    }
+
+    public class UppercaseHandler implements InvocationHandler{
+        Object target;
+
+        public UppercaseHandler(Object target) {
+            this.target = target;
+        }
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Object ret = method.invoke(target, args);
+            if(ret instanceof String && method.getName().startsWith("say")){
+                return ((String)ret).toUpperCase();
+            }else {
+                return ret;
+            }
+        }
     }
 
     public class HelloUppercase implements Hello{
