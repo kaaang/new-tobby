@@ -38,6 +38,7 @@ public class ReflectionTest {
         assertThat(proxiedHello.sayHello("Toby")).isEqualTo("HELLO TOBY");
         assertThat(proxiedHello.sayHi("Toby")).isEqualTo("HI TOBY");
         assertThat(proxiedHello.sayThankYou("Toby")).isEqualTo("THANK YOU TOBY");
+
     }
 
     @Test
@@ -62,6 +63,8 @@ public class ReflectionTest {
             }
         }
     }
+
+
 
     public class HelloUppercase implements Hello{
         Hello hello;
