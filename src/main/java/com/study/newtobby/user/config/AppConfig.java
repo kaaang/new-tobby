@@ -3,7 +3,8 @@ package com.study.newtobby.user.config;
 import com.study.newtobby.user.dao.UserDao;
 import com.study.newtobby.user.dao.UserDaoJdbc;
 import com.study.newtobby.user.service.*;
-import org.springframework.aop.framework.ProxyFactoryBean;
+import com.study.newtobby.user.test.TestUserServiceImpl;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.context.annotation.Bean;
@@ -50,16 +51,16 @@ public class AppConfig {
 //		return txProxyFactoryBean;
 //	}
 
-	@Bean
-	public UserServiceImpl userServiceImpl(UserDao userDao, DataSource dataSource, PlatformTransactionManager transactionManager, MailSender mailSender) {
-		UserServiceImpl userServiceImpl = new UserServiceImpl();
-
-		userServiceImpl.setUserDao(userDao);
-		userServiceImpl.setDataSource(dataSource);
-		userServiceImpl.setTransactionManager(transactionManager);
-		userServiceImpl.setMailSender(mailSender);
-		return userServiceImpl;
-	}
+//	@Bean
+//	public UserServiceImpl userServiceImpl(UserDao userDao, DataSource dataSource, PlatformTransactionManager transactionManager, MailSender mailSender) {
+//		UserServiceImpl userServiceImpl = new UserServiceImpl();
+//
+//		userServiceImpl.setUserDao(userDao);
+//		userServiceImpl.setDataSource(dataSource);
+//		userServiceImpl.setTransactionManager(transactionManager);
+//		userServiceImpl.setMailSender(mailSender);
+//		return userServiceImpl;
+//	}
 
 	@Bean
 	public PlatformTransactionManager transactionManager(DataSource dataSource) {
@@ -97,12 +98,40 @@ public class AppConfig {
 		return defaultPointcutAdvisor;
 	}
 
-	@Bean(name = "userService")
-	public ProxyFactoryBean userService(){
-		ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
-		proxyFactoryBean.setTarget(userServiceImpl(userDao(), dataSource(), transactionManager(dataSource()), mailSender()));
-		proxyFactoryBean.setInterceptorNames("transactionAdvisor");
+//	@Bean(name = "userService")
+//	public ProxyFactoryBean userService(){
+//		ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+//		proxyFactoryBean.setTarget(userServiceImpl(userDao(), dataSource(), transactionManager(dataSource()), mailSender()));
+//		proxyFactoryBean.setInterceptorNames("transactionAdvisor");
+//
+//		return proxyFactoryBean;
+//	}
 
-		return proxyFactoryBean;
+	@Bean(name = "userService")
+	public UserServiceImpl userService(){
+		UserServiceImpl userService = new UserServiceImpl();
+		userService.setUserDao(this.userDao());
+		userService.setMailSender(mailSender());
+
+		return userService;
 	}
+
+//	@Bean
+//	public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
+//		return new DefaultAdvisorAutoProxyCreator();
+//	}
+
+	@Bean(name = "transactionPointcut")
+	public NameMatchClassMethodPointCut nameMatchClassMethodPointCut(){
+		NameMatchClassMethodPointCut nameMatchClassMethodPointCut = new NameMatchClassMethodPointCut();
+		nameMatchClassMethodPointCut.setMappedClassName("*ServiceImpl");
+		nameMatchClassMethodPointCut.setMappedName("upgrade*");
+		return nameMatchClassMethodPointCut;
+	}
+
+	@Bean(name = "testUserService")
+	public TestUserServiceImpl testUserService(){
+		return new TestUserServiceImpl();
+	}
+
 }

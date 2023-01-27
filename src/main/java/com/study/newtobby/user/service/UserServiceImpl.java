@@ -17,8 +17,8 @@ public class UserServiceImpl implements UserService {
     public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
     public static final int MIN_RECOMMEND_FOR_GOLD = 30;
     private UserDao userDao;
-    private DataSource dataSource;
-    private PlatformTransactionManager transactionManager;
+//    private DataSource dataSource;
+//    private PlatformTransactionManager transactionManager;
     private MailSender mailSender;
 
     public void setMailSender(MailSender mailSender) {
@@ -29,14 +29,15 @@ public class UserServiceImpl implements UserService {
         this.userDao = userDao;
     }
 
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
-    }
+//    public void setDataSource(DataSource dataSource) {
+//        this.dataSource = dataSource;
+//    }
 
-    public void setTransactionManager(PlatformTransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
-    }
+//    public void setTransactionManager(PlatformTransactionManager transactionManager) {
+//        this.transactionManager = transactionManager;
+//    }
 
+    @Override
     public void upgradeLevels() {
         List<User> users = userDao.getAll();
 
@@ -46,6 +47,8 @@ public class UserServiceImpl implements UserService {
             }
         }
     }
+
+
 
     public void add(User user) {
         if (user.getLevel() == null) {
@@ -84,5 +87,16 @@ public class UserServiceImpl implements UserService {
         mailMessage.setText("사용자님의 등급이 " + user.getLevel().name());
 
         mailSender.send(mailMessage);
+    }
+
+    static class TestUserServiceImpl extends UserServiceImpl{
+        private String id = "madnite1";
+
+        protected void upgradeLevel(User user){
+            if(user.getId().equals(this.id)){
+                throw new IllegalArgumentException();
+            }
+            super.upgradeLevel(user);
+        }
     }
 }
