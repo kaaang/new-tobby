@@ -4,6 +4,7 @@ import com.study.newtobby.user.dao.UserDao;
 import com.study.newtobby.user.dao.UserDaoJdbc;
 import com.study.newtobby.user.service.*;
 import com.study.newtobby.user.test.TestUserServiceImpl;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.NameMatchMethodPointcut;
@@ -81,13 +82,13 @@ public class AppConfig {
 		return transactionAdvice;
 	}
 
-	@Bean
-	public NameMatchMethodPointcut transactionPointcut(){
-		NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut();
-		pointcut.setMappedName("upgrade*");
-
-		return pointcut;
-	}
+//	@Bean
+//	public NameMatchMethodPointcut transactionPointcut(){
+//		NameMatchMethodPointcut pointcut = new NameMatchMethodPointcut();
+//		pointcut.setMappedName("upgrade*");
+//
+//		return pointcut;
+//	}
 
 	@Bean
 	public DefaultPointcutAdvisor transactionAdvisor(){
@@ -121,17 +122,25 @@ public class AppConfig {
 //		return new DefaultAdvisorAutoProxyCreator();
 //	}
 
-	@Bean(name = "transactionPointcut")
-	public NameMatchClassMethodPointCut nameMatchClassMethodPointCut(){
-		NameMatchClassMethodPointCut nameMatchClassMethodPointCut = new NameMatchClassMethodPointCut();
-		nameMatchClassMethodPointCut.setMappedClassName("*ServiceImpl");
-		nameMatchClassMethodPointCut.setMappedName("upgrade*");
-		return nameMatchClassMethodPointCut;
-	}
+//	@Bean(name = "transactionPointcut")
+//	public NameMatchClassMethodPointCut nameMatchClassMethodPointCut(){
+//		NameMatchClassMethodPointCut nameMatchClassMethodPointCut = new NameMatchClassMethodPointCut();
+//		nameMatchClassMethodPointCut.setMappedClassName("*ServiceImpl");
+//		nameMatchClassMethodPointCut.setMappedName("upgrade*");
+//		return nameMatchClassMethodPointCut;
+//	}
 
 	@Bean(name = "testUserService")
 	public TestUserServiceImpl testUserService(){
 		return new TestUserServiceImpl();
+	}
+
+	@Bean(name = "transactionPointcut")
+	public AspectJExpressionPointcut transactionPointcut(){
+		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+		pointcut.setExpression("execution(* *..*ServiceImpl.upgrade*(..))");
+
+		return pointcut;
 	}
 
 }
