@@ -15,8 +15,10 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 import javax.sql.DataSource;
+import java.util.Properties;
 
 
 @Configuration
@@ -74,12 +76,28 @@ public class AppConfig {
 		return mailSender;
 	}
 
-	@Bean
-	public TransactionAdvice transactionAdvice(){
-		TransactionAdvice transactionAdvice = new TransactionAdvice();
-		transactionAdvice.setTransactionManager(transactionManager(dataSource()));
+//	@Bean
+//	public TransactionAdvice transactionAdvice(){
+//		TransactionAdvice transactionAdvice = new TransactionAdvice();
+//		transactionAdvice.setTransactionManager(transactionManager(dataSource()));
+//
+//		return transactionAdvice;
+//	}
 
-		return transactionAdvice;
+	@Bean(name = "transactionAdvice")
+	public TransactionInterceptor transactionAdvice(){
+		TransactionInterceptor transactionInterceptor = new TransactionInterceptor();
+		transactionInterceptor.setTransactionManager(transactionManager(dataSource()));
+
+		Properties properties = new Properties();
+//		properties.put("get*", "PROPAGATION_REQUIRED,readOnly,timeout_30");
+		properties.put("upgrade*","PROPAGATION_REQUIRES_NEW,ISOLATION_SERIALIZABLE");
+//		properties.put("*","PROPAGATION_REQUIRED");
+		properties.put("*","PROPAGATION_REQUIRED");
+		properties.put("get*","PROPAGATION_REQUIRED,readOnly");
+
+		transactionInterceptor.setTransactionAttributes(properties);
+		return transactionInterceptor;
 	}
 
 //	@Bean
@@ -138,7 +156,8 @@ public class AppConfig {
 	@Bean(name = "transactionPointcut")
 	public AspectJExpressionPointcut transactionPointcut(){
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
-		pointcut.setExpression("execution(* *..*ServiceImpl.upgrade*(..))");
+//		pointcut.setExpression("execution(* *..*ServiceImpl.upgrade*(..))");
+		pointcut.setExpression("bean(*Service)");
 
 		return pointcut;
 	}
