@@ -6,6 +6,7 @@ import com.study.newtobby.user.domain.Level;
 import com.study.newtobby.user.domain.User;
 import com.study.newtobby.user.service.*;
 import com.study.newtobby.user.test.TestUserServiceException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,9 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -50,11 +54,14 @@ public class UserServiceTest {
 	@Autowired
 	private MailSender mailSender;
 
-	@Autowired
-	private PlatformTransactionManager transactionManager;
+//	@Autowired
+//	private PlatformTransactionManager transactionManager;
 
 	@Autowired
 	private ApplicationContext context;
+
+	@Autowired
+	private PlatformTransactionManager transactionManager;
 
 	@BeforeEach
 	public void setUp(){
@@ -65,6 +72,11 @@ public class UserServiceTest {
 				new User("madnite1", "이상호", "p1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD, "madnite1@test.com"),
 				new User("green", "오민규", "p1", Level.GOLD, 100, Integer.MAX_VALUE, "green@test.com")
 		);
+	}
+
+	@AfterEach
+	void tearDown(){
+		userService.deleteAll();
 	}
 
 	@Test
@@ -250,5 +262,17 @@ public class UserServiceTest {
 	@Test
 	void readOnlyTransactionAttribute() {
 		testUserService.getAll();
+	}
+
+	@Test
+	@Transactional
+	void transactionSync() {
+//		DefaultTransactionDefinition txDefinition = new DefaultTransactionDefinition();
+//		TransactionStatus txStatus = transactionManager.getTransaction(txDefinition);
+
+		userService.deleteAll();
+
+		userService.add(users.get(0));
+		userService.add(users.get(1));
 	}
 }
